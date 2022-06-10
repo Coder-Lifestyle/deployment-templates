@@ -1,0 +1,16 @@
+name: Lint
+on:
+  push:
+    branches: ['your_branch']
+  pull_request:
+    branches: ['your_branch']
+jobs:
+  php-cs-fixer:
+    name: PHP-CS-Fixer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: PHP-CS-Fixer
+        uses: docker://oskarstark/php-cs-fixer-ga
+        with:
+          args: --diff --dry-run

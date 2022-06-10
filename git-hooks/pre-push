@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Stop executing if a command fails
+set -euf -o pipefail
+
+BASE=origin/develop
+
+echo "Comparing with ${BASE}"
+
+git fetch ${BASE/\// }
+
+echo "#################################"
+echo "###      Running GrumPHP      ###"
+echo "#################################"
+
+if (git diff -s ${BASE}.. 2>&1| grep -q "too many files") then
+    echo ""
+    echo "Please rebase your branch first, you're too far behind."
+    exit 1
+fi
+
+DIFF=$(git diff -r -p -m -M --full-index ${BASE}..)
+(cd "./" && printf "%s\n" "${DIFF}" | 'vendor/phpro/grumphp/bin/grumphp' 'git:pre-commit' '--skip-success-output')
+
+echo "#################################"
+echo "###      Running PHPUnit     ####"
+echo "#################################"
+
+DIFF=$(git log --right-only --cherry-pick --pretty="format:" --name-only ${BASE}..|sort|uniq)
+cd "./" && printf "%s\n" "${DIFF}" | while read testclass
+    do
+        if [[ ${testclass} =~ ^tests/.*Test.php && -f "${testclass}" ]]
+        then
+            echo ""
+            echo "- Running tests for $testclass";
+            vendor/bin/phpunit "${testclass}" --exclude-group=aws
+        fi
+    done
+
+echo "#################################"
+echo "###       Everything OK      ####"
+echo "#################################"

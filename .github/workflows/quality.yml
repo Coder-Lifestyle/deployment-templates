@@ -1,0 +1,20 @@
+name: Code Quality
+on:
+  push:
+    branches: ['your_branch']
+  pull_request:
+    branches: ['your_branch']
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/alexono1/php-docker-image:main
+      credentials:
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: install composer dependencies
+        run: composer install --no-scripts --prefer-dist --no-ansi --no-interaction --no-progress
+      - name: Check Code Quality
+        run: ./vendor/bin/psalm

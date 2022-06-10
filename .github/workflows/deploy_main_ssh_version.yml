@@ -1,0 +1,29 @@
+name: Deploy to Main
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the main or master branch
+  push:
+    branches: [ your_main_branch ]
+  pull_request:
+    branches: [ your_main_branch ]
+  workflow_dispatch:
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+   name: Build
+   runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+   steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      # Runs a set of commands using the runners shell
+      - name: Deploy automatically through SSH connection
+        run: |
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          which ssh-agent || ( yum install openssh-client -y )
+          eval $(ssh-agent -s)
+          sshpass -p ${{ secrets.PASSWORD }} ssh -t -p ${{ secrets.PORT }} -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }}  
+          "cd {change/your/path/here}  && sh your_deploy.sh"
+          
+    
+
